@@ -3,7 +3,8 @@ import torch
 import logging
 import numpy as np
 
-from modeling.openclip_model import OpenCLIPModel
+from modeling.openclip_model import OpenCLIPModel as OPT_Model
+from clip_server.model.openclip_model import OpenCLIPModel as ORG_Model
 
 
 def benchmark(N = 1, B = 1):
@@ -13,7 +14,8 @@ def benchmark(N = 1, B = 1):
 
     # Load Model: mock input
     name='ViT-L-14::laion2b-s32b-b82k'
-    model = OpenCLIPModel(name=name, device='cuda')
+    opt_model = OPT_Model(name=name, device='cuda')
+    org_model = ORG_Model(name=name, device='cuda')
 
     # Benchmark
     complete_time_baseline = 0
@@ -26,19 +28,26 @@ def benchmark(N = 1, B = 1):
 
             torch.cuda.synchronize()
             start = time.perf_counter()
-            _ = model.encode_text(input)
+            _1 = org_model.encode_text(input)
             torch.cuda.synchronize()
             complete_time_baseline += time.perf_counter() - start
 
+            torch.cuda.synchronize()
+            start = time.perf_counter()
+            _2 = opt_model.encode_text(input)
+            torch.cuda.synchronize()
+            complete_time_optimized += time.perf_counter() - start
+
     print(f"{complete_time_baseline=:.5f}s")
     print(f"{complete_time_optimized=:.5f}s")
+    show_diff(_1, _2)
     return complete_time_baseline, complete_time_optimized
     
 
 def show_diff(a, b):
     from matplotlib import pyplot as plt
-    print(a)
-    print(b)
+    # print(a)
+    # print(b)
     
     a = a.cpu().numpy()[0]
     b = b.cpu().numpy()[0]
@@ -52,7 +61,7 @@ if __name__ == "__main__":
     complete_time_optimized = []
     speed_up = []
     # warm up
-    for _ in range(2):
+    for _ in range(10):
         _, _ = benchmark(1, 1)
     # benchmark
     for N in [1, 100, 1000, 5000, 10000]:

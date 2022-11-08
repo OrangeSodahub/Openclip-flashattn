@@ -3,6 +3,7 @@ from torch import nn
 from collections import OrderedDict
 from typing import Callable, Optional
 
+from clip_server.model.model import LayerNorm
 from modeling.flash_attn.flash_attention import MultiheadAttention
 
 
@@ -20,17 +21,17 @@ class ResidualAttentionBlock(nn.Module):
     ):
         super().__init__()
 
-        self.ln_1 = nn.LayerNorm(d_model)
+        self.ln_1 = LayerNorm(d_model)
         self.attn = MultiheadAttention(d_model, n_head)
         self.ln_attn = nn.LayerNorm(d_model) if scale_attn else nn.Identity()
 
-        self.ln_2 = nn.LayerNorm(d_model)
+        self.ln_2 = LayerNorm(d_model)
         mlp_width = int(d_model * mlp_ratio)
         self.mlp = nn.Sequential(
             OrderedDict(
                 [
                     ("c_fc", nn.Linear(d_model, mlp_width)),
-                    ('ln', nn.LayerNorm(mlp_width) if scale_fc else nn.Identity()),
+                    ('ln', LayerNorm(mlp_width) if scale_fc else nn.Identity()),
                     ("gelu", act_layer()),
                     ("c_proj", nn.Linear(mlp_width, d_model)),
                 ]
@@ -43,6 +44,6 @@ class ResidualAttentionBlock(nn.Module):
     def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
         if attn_mask is not None:
             attn_mask = attn_mask.to(dtype=x.dtype, device=x.device)
-        x = x + self.attention(self.ln_1(x), attn_mask=attn_mask)
+        x = x + self.attention(self.ln_1(x)) # TODO: attn_mask
         x = x + self.mlp(self.ln_2(x))
-        return self.ln_2(x)
+        return x
