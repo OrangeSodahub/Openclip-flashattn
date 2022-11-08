@@ -38,34 +38,15 @@ def flash_attention_forward(
         if cu_seqlens is None:
             batch_size = qkv.shape[0]
             seqlen = qkv.shape[1]
-            if key_padding_mask is None:
-                qkv = rearrange(qkv, 'b s ... -> (b s) ...')
-                max_s = seqlen
-                cu_seqlens = torch.arange(0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32,
-                                        device=qkv.device)
-                output = flash_attn_unpadded_qkvpacked_func(
-                    qkv, cu_seqlens, max_s, attention_dropout,
-                    softmax_scale=softmax_scale, causal=causal
-                )
-                output = rearrange(output, '(b s) ... -> b s ...', b=batch_size)
-            else:
-                nheads = qkv.shape[-2]
-                x = rearrange(qkv, 'b s three h d -> b s (three h d)')
-                x_unpad, indices, cu_seqlens, max_s = unpad_input(x, key_padding_mask)
-                x_unpad = rearrange(x_unpad, 'nnz (three h d) -> nnz three h d', three=3, h=nheads)
-                output_unpad = flash_attn_unpadded_qkvpacked_func(
-                    x_unpad, cu_seqlens, max_s, attention_dropout,
-                    softmax_scale=softmax_scale, causal=causal
-                )
-                output = rearrange(pad_input(rearrange(output_unpad, 'nnz h d -> nnz (h d)'),
-                                            indices, batch_size, seqlen),
-                                'b s (h d) -> b s h d', h=nheads)
-        else:
-            assert max_s is not None
+            qkv = rearrange(qkv, 'b s ... -> (b s) ...')
+            max_s = seqlen
+            cu_seqlens = torch.arange(0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32,
+                                    device=qkv.device)
             output = flash_attn_unpadded_qkvpacked_func(
                 qkv, cu_seqlens, max_s, attention_dropout,
                 softmax_scale=softmax_scale, causal=causal
             )
+            output = rearrange(output, '(b s) ... -> b s ...', b=batch_size)
 
         return output, None
 
@@ -189,25 +170,6 @@ class MultiheadAttention(nn.MultiheadAttention):
         # update source sequence length after adjustments
         src_len = k.size(1)
 
-        # merge key padding and attention masks
-        if key_padding_mask is not None:
-            assert key_padding_mask.shape == (bsz, src_len), \
-                f"expecting key_padding_mask shape of {(bsz, src_len)}, but got {key_padding_mask.shape}"
-            key_padding_mask = key_padding_mask.view(bsz, 1, 1, src_len).   \
-                expand(-1, self.num_heads, -1, -1).reshape(bsz * self.num_heads, 1, src_len)
-            if attn_mask is None:
-                attn_mask = key_padding_mask
-            elif attn_mask.dtype == torch.bool:
-                attn_mask = attn_mask.logical_or(key_padding_mask)
-            else:
-                attn_mask = attn_mask.masked_fill(key_padding_mask, float("-inf"))
-
-        # convert mask to float
-        if attn_mask is not None and attn_mask.dtype == torch.bool:
-            new_attn_mask = torch.zeros_like(attn_mask, dtype=q.dtype)
-            new_attn_mask.masked_fill_(attn_mask, float("-inf"))
-            attn_mask = new_attn_mask
-
         # adjust dropout probability
         dropout_p = 0.0
 
@@ -231,5 +193,5 @@ class MultiheadAttention(nn.MultiheadAttention):
         attn_output = linear(attn_output, self.out_proj.weight, self.out_proj.bias)
         attn_output = attn_output.view(tgt_len, bsz, attn_output.size(1))
 
-        return attn_output
+        return attn_output, None
     """
