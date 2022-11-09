@@ -21,20 +21,20 @@ def benchmark(N = 1, B = 1):
     complete_time_baseline = 0
     complete_time_optimized = 0
     
-    input = torch.randint(0, 10, (B, 77)).long().cuda()
-    # inputs_image = torch.randint(0, 10, (N, B, 3, 224, 224)).half().cuda()
+    # input = torch.randint(0, 10, (B, 77)).long().cuda()
+    input = torch.randint(0, 10, (B, 3, 224, 224)).half().cuda()
     with torch.inference_mode(), torch.cuda.amp.autocast(enabled=True, dtype=torch.float16, cache_enabled=True):
         for _ in range(N):
 
             torch.cuda.synchronize()
             start = time.perf_counter()
-            _1 = org_model.encode_text(input)
+            _1 = org_model.encode_image(input)
             torch.cuda.synchronize()
             complete_time_baseline += time.perf_counter() - start
 
             torch.cuda.synchronize()
             start = time.perf_counter()
-            _2 = opt_model.encode_text(input)
+            _2 = opt_model.encode_image(input)
             torch.cuda.synchronize()
             complete_time_optimized += time.perf_counter() - start
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     for _ in range(5):
         _, _, _ = benchmark(1, 1)
     # benchmark
-    for N in [1000]:
+    for N in [100]:
         for B in [1, 2, 4, 8, 16]:
             print(f"Runing on N={N}, B={B}")
             complete_time_baseline_, complete_time_optimized_, mean_diff_ = benchmark(N, B)
