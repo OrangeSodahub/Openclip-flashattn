@@ -40,6 +40,7 @@ def benchmark(N = 1, B = 1):
 
     print(f"{complete_time_baseline=:.5f}s")
     print(f"{complete_time_optimized=:.5f}s")
+    show_diff(_1, _2)
     return complete_time_baseline, complete_time_optimized
     
 
