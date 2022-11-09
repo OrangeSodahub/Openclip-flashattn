@@ -40,11 +40,16 @@ def benchmark(N = 1, B = 1):
 
     print(f"{complete_time_baseline=:.5f}s")
     print(f"{complete_time_optimized=:.5f}s")
-    return complete_time_baseline, complete_time_optimized
+    mean_diff = np.mean(abs(_1.cpu().numpy()-_2.cpu().numpy()))
+    print(f"{mean_diff}")
+    # show_diff(_1, _2)
+    return complete_time_baseline, complete_time_optimized, mean_diff
     
 
 def show_diff(a, b):
     from matplotlib import pyplot as plt
+    print(a)
+    print(b)
     
     a = a.cpu().numpy()[0]
     b = b.cpu().numpy()[0]
@@ -56,24 +61,29 @@ if __name__ == "__main__":
     import time
     complete_time_baseline = []
     complete_time_optimized = []
+    mean_diff = []
     speed_up = []
     # warm up
-    for _ in range(10):
-        _, _ = benchmark(1, 1)
+    for _ in range(5):
+        _, _, _ = benchmark(1, 2)
     # benchmark
-    for N in [1, 100, 1000, 5000, 10000]:
+    for N in [1000]:
         for B in [1, 2, 4, 8, 16]:
             print(f"Runing on N={N}, B={B}")
-            complete_time_baseline_, complete_time_optimized_ = benchmark(N, B)
+            complete_time_baseline_, complete_time_optimized_, mean_diff_ = benchmark(N, B)
             complete_time_baseline.append(complete_time_baseline_)
             complete_time_optimized.append(complete_time_optimized_)
+            mean_diff.append(mean_diff_)
             speed_up_ = complete_time_baseline_/complete_time_optimized_
             speed_up.append(speed_up_)
-            print(f"Speed up:{speed_up_}\n")
-    print(complete_time_baseline)
-    print(complete_time_optimized)
-    print(speed_up)
+            print(f"Speed up:{speed_up_}")
+            print(f"Diff:{mean_diff_}\n")
+    print(f"{complete_time_baseline}\n")
+    print(f"{complete_time_optimized}\n")
+    print(f"{mean_diff}\n")
+    print(f"{speed_up}\n")
 
-    np.savetxt('/assets/baseline.txt', complete_time_baseline)
-    np.savetxt('/assets/optimized.txt', complete_time_optimized)
-    np.savetxt('/assets/speed_up.txt', speed_up)
+    np.savetxt('/openclip-flashattn/assets/baseline.txt', complete_time_baseline)
+    np.savetxt('/openclip-flashattn/assets/optimized.txt', complete_time_optimized)
+    np.savetxt('/openclip-flashattn/assets/diff.txt', mean_diff)
+    np.savetxt('/openclip-flashattn/assets/speed_up.txt', speed_up)
