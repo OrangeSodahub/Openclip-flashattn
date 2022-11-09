@@ -65,7 +65,7 @@ if __name__ == "__main__":
     speed_up = []
     # warm up
     for _ in range(5):
-        _, _, _ = benchmark(1, 2)
+        _, _, _ = benchmark(1, 1)
     # benchmark
     for N in [1000]:
         for B in [1, 2, 4, 8, 16]:
