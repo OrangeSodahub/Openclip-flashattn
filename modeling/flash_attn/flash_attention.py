@@ -14,7 +14,8 @@ class MultiheadAttention(nn.MultiheadAttention):
     def __init__(self, embed_dim, num_heads, dropout=0, bias=True, add_bias_kv=False, add_zero_attn=False,
                  kdim=None, vdim=None, batch_first=False, device=None, dtype=None) -> None:
         assert flash_attn_unpadded_func is not None, "FlashAttention is not installed."
-        super().__init__(embed_dim, num_heads, dropout, bias, add_bias_kv, add_zero_attn, kdim, vdim, batch_first, device, dtype)
+        super().__init__(embed_dim, num_heads, dropout, bias, add_bias_kv, add_zero_attn,
+                        kdim, vdim, batch_first, device, dtype)
 
     def attention(
         self,

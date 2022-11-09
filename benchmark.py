@@ -40,14 +40,11 @@ def benchmark(N = 1, B = 1):
 
     print(f"{complete_time_baseline=:.5f}s")
     print(f"{complete_time_optimized=:.5f}s")
-    show_diff(_1, _2)
     return complete_time_baseline, complete_time_optimized
     
 
 def show_diff(a, b):
     from matplotlib import pyplot as plt
-    # print(a)
-    # print(b)
     
     a = a.cpu().numpy()[0]
     b = b.cpu().numpy()[0]
@@ -77,6 +74,6 @@ if __name__ == "__main__":
     print(complete_time_optimized)
     print(speed_up)
 
-    np.savetxt('./assets/baseline.txt', complete_time_baseline)
-    np.savetxt('./assets/optimized.txt', complete_time_optimized)
-    np.savetxt('./assets/speed_up.txt', speed_up)
+    np.savetxt('/assets/baseline.txt', complete_time_baseline)
+    np.savetxt('/assets/optimized.txt', complete_time_optimized)
+    np.savetxt('/assets/speed_up.txt', speed_up)
