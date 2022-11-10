@@ -44,6 +44,6 @@ class ResidualAttentionBlock(nn.Module):
     def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
         if attn_mask is not None:
             attn_mask = attn_mask.to(dtype=x.dtype, device=x.device)
-        x = x + self.attention(self.ln_1(x)) # TODO: attn_mask
+        x = x + self.ln_attn(self.attention(self.ln_1(x))) # TODO: attn_mask
         x = x + self.mlp(self.ln_2(x))
         return x

@@ -21,20 +21,26 @@ def benchmark(N = 1, B = 1):
     complete_time_baseline = 0
     complete_time_optimized = 0
     
-    input = torch.randint(0, 10, (B, 77)).long().cuda()
-    # input = torch.randint(0, 10, (B, 3, 224, 224)).half().cuda()
+    # input = torch.randint(0, 10, (B, 77)).long().cuda()
+    input = torch.randint(0, 10, (B, 3, 224, 224)).half().cuda()
     with torch.inference_mode(), torch.cuda.amp.autocast(enabled=True, dtype=torch.float16, cache_enabled=True):
+        # warm up
+        for _ in range(10):
+            _1 = org_model.encode_image(input)
+            _2 = opt_model.encode_image(input)
+        
+        # benchamrk
         for _ in range(N):
 
             torch.cuda.synchronize()
             start = time.perf_counter()
-            _1 = org_model.encode_text(input)
+            _1 = org_model.encode_image(input)
             torch.cuda.synchronize()
             complete_time_baseline += time.perf_counter() - start
 
             torch.cuda.synchronize()
             start = time.perf_counter()
-            _2 = opt_model.encode_text(input)
+            _2 = opt_model.encode_image(input)
             torch.cuda.synchronize()
             complete_time_optimized += time.perf_counter() - start
 
@@ -42,19 +48,7 @@ def benchmark(N = 1, B = 1):
     print(f"{complete_time_optimized=:.5f}s")
     mean_diff = np.mean(abs(_1.cpu().numpy()-_2.cpu().numpy()))
     print(f"{mean_diff}")
-    # show_diff(_1, _2)
     return complete_time_baseline, complete_time_optimized, mean_diff
-    
-
-def show_diff(a, b):
-    from matplotlib import pyplot as plt
-    print(a)
-    print(b)
-    
-    a = a.cpu().numpy()[0]
-    b = b.cpu().numpy()[0]
-    plt.plot(np.arange(768), a-b)
-    plt.show()
     
 
 if __name__ == "__main__":
@@ -63,10 +57,6 @@ if __name__ == "__main__":
     complete_time_optimized = []
     mean_diff = []
     speed_up = []
-    # warm up
-    for _ in range(5):
-        _, _, _ = benchmark(1, 1)
-    # benchmark
     for N in [100]:
         for B in [1, 2, 4, 8, 16]:
             print(f"Runing on N={N}, B={B}")
@@ -82,8 +72,3 @@ if __name__ == "__main__":
     print(f"{complete_time_optimized}\n")
     print(f"{mean_diff}\n")
     print(f"{speed_up}\n")
-
-    np.savetxt('/openclip-flashattn/assets/baseline.txt', complete_time_baseline)
-    np.savetxt('/openclip-flashattn/assets/optimized.txt', complete_time_optimized)
-    np.savetxt('/openclip-flashattn/assets/diff.txt', mean_diff)
-    np.savetxt('/openclip-flashattn/assets/speed_up.txt', speed_up)
