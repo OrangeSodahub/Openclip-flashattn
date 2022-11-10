@@ -24,6 +24,7 @@ class MultiheadAttention(nn.MultiheadAttention):
         seqlen=77,
         softmax_scale=None,
         attention_dropout=0.0,
+        causal=False,
         cu_seqlens=None,
         max_s=None,
         need_weights=False
@@ -43,10 +44,9 @@ class MultiheadAttention(nn.MultiheadAttention):
             max_s = seqlen
             cu_seqlens = torch.arange(0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32,
                                     device=q.device)
-            # Using causal mask
             output = flash_attn_unpadded_func(
                 q, k, v, cu_seqlens, cu_seqlens, max_s, max_s, attention_dropout,
-                softmax_scale=softmax_scale, causal=True
+                softmax_scale=softmax_scale, causal=causal
             )
 
         return output
@@ -70,8 +70,9 @@ class MultiheadAttention(nn.MultiheadAttention):
         k = k.transpose(0, 1).contiguous().view(batch_size * seqlen, self.num_heads, self.head_dim)
         v = v.transpose(0, 1).contiguous().view(batch_size * seqlen, self.num_heads, self.head_dim)
         
-        # flash attention
-        attn_output = self.attention(q, k, v, batch_size, seqlen)
+        # flash attention (use causal mask)
+        causal = attn_mask is not None
+        attn_output = self.attention(q, k, v, batch_size, seqlen, causal=causal)
 
         # out-projection
         # `(b s) h d -> s b (h d)`
