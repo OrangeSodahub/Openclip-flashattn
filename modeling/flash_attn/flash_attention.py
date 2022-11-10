@@ -22,10 +22,8 @@ class MultiheadAttention(nn.MultiheadAttention):
         q, k, v,
         batch_size=1,
         seqlen=77,
-        key_padding_mask=None,
         softmax_scale=None,
         attention_dropout=0.0,
-        causal=False,
         cu_seqlens=None,
         max_s=None,
         need_weights=False
@@ -45,9 +43,10 @@ class MultiheadAttention(nn.MultiheadAttention):
             max_s = seqlen
             cu_seqlens = torch.arange(0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32,
                                     device=q.device)
+            # Using causal mask
             output = flash_attn_unpadded_func(
                 q, k, v, cu_seqlens, cu_seqlens, max_s, max_s, attention_dropout,
-                softmax_scale=softmax_scale, causal=causal
+                softmax_scale=softmax_scale, causal=True
             )
 
         return output
