@@ -64,7 +64,7 @@ class MultiheadAttention(nn.MultiheadAttention):
         # set up shape vars
         seqlen, batch_size, embed_dim = query.shape
         
-        # in-projection and rearrange `b s (h d) -> (b s) h d`
+        # in-projection and rearrange `s b (3 h d) -> s b (h d) -> (b s) h d`
         q, k, v = linear(query, self.in_proj_weight, self.in_proj_bias).chunk(3, dim=-1)
         q = q.transpose(0, 1).contiguous().view(batch_size * seqlen, self.num_heads, self.head_dim)
         k = k.transpose(0, 1).contiguous().view(batch_size * seqlen, self.num_heads, self.head_dim)
