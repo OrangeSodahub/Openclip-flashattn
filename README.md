@@ -1,6 +1,6 @@
 ## Openclip-flashattn
 
-Test model (on `RTX3080`): `ViT-L-14::laion2b-s32b-b82k` (possibly not correct)
+Test model (on `RTX3080`): `ViT-L-14::laion2b-s32b-b82k`
 
 Times = **100**, using causal mask
 
@@ -51,7 +51,7 @@ Times = **100**, using causal mask
 | (8, 3, 224, 224)  |     0.47367 |       0.45316 |      1.04527 |   0.00064 |
 | (16, 3, 224, 224) |     0.51586 |       0.50555 |       1.0204 |   0.00058 |
 
-Test model (on `Tesla T4`): `ViT-B-16::laion400m_e31` (possibly not correct)
+Test model (on `Tesla T4`): `ViT-B-16::laion400m_e31`
 
 Times = **100**, using causal mask
 
@@ -68,7 +68,7 @@ Times = **100**, using causal mask
 | (8, 3, 224, 224)  |     0.93341 |       0.82501 |      1.13139 |   0.00045 |
 | (16, 3, 224, 224) |     1.77167 |       1.58981 |      1.11439 |   0.00044 |
 
-Test model (on `Tesla T4`): `ViT-g-14::laion2b-s12b-b42k` (possibly not correct)
+Test model (on `Tesla T4`): `ViT-g-14::laion2b-s12b-b42k`
 
 Times = **100**, using causal mask
 
@@ -85,7 +85,7 @@ Times = **100**, using causal mask
 | (8, 3, 224, 224)  |    10.37121 |        9.8581 |      1.05204 |   0.00101 |
 | (16, 3, 224, 224) |    20.85575 |      19.86552 |      1.04984 |   0.00112 |
 
-Test model (on `Tesla T4`): `ViT-H-14::laion2b-s32b-b79k` (possibly not correct)
+Test model (on `Tesla T4`): `ViT-H-14::laion2b-s32b-b79k`
 
 Times = **100**, using causal mask
 
