@@ -7,13 +7,12 @@ from modeling.openclip_model import OpenCLIPModel as OPT_Model
 from clip_server.model.openclip_model import OpenCLIPModel as ORG_Model
 
 
-def benchmark(N = 1, B = 1, mode = 'text'):
+def benchmark(N = 1, B = 1, name = None, mode = 'text'):
     logging.getLogger().setLevel(logging.INFO)
     np.random.seed(0)
     torch.manual_seed(4896)
 
     # Load Model: mock input
-    name='ViT-L-14::laion2b-s32b-b82k'
     opt_model = OPT_Model(name=name, device='cuda')
     org_model = ORG_Model(name=name, device='cuda')
 
@@ -73,7 +72,7 @@ if __name__ == "__main__":
     for N in [100]:
         for B in [1, 2, 4, 8, 16]:
             print(f"Runing on N={N}, B={B}")
-            complete_time_baseline_, complete_time_optimized_, mean_diff_ = benchmark(N, B, 'text')
+            complete_time_baseline_, complete_time_optimized_, mean_diff_ = benchmark(N, B, 'ViT-H-14::laion2b-s32b-b79k', 'image')
             complete_time_baseline.append(complete_time_baseline_)
             complete_time_optimized.append(complete_time_optimized_)
             mean_diff.append(mean_diff_)
